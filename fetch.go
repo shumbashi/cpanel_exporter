@@ -295,6 +295,32 @@ func getPlans() (map[string]int){
     return plans
 }
 
+func getPlansWithOwner() (map[string]int){
+    
+    var plans = make(map[string]int)
+    
+    files := getFilesInDir("/var/cpanel/users")
+    
+    matches := matchFilesLine(files,"PLAN=.*",true)
+   
+    for f,m := range matches {
+         
+         parts := strings.Split(m,"=")
+         
+         if(len(parts)>0){
+             matchOwner := matchFileLine(f,"OWNER=.*")
+             for _,o := range matchOwner {
+                 ownerParts := strings.Split(o,"=")
+                 plans[parts[1]+","+ownerParts[1]]++
+             }
+             
+             
+         }
+    }
+    
+    return plans
+}
+
 func matchFileLine(f string,regx string) map[string]string{ 
     
         var lines = make(map[string]string)

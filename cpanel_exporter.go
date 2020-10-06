@@ -10,6 +10,7 @@ import(
     "path/filepath"
     "log"
     "strconv"
+    "strings"
 
 )
 
@@ -65,7 +66,7 @@ var (
         			Name: "cpanel_plans",
         			Help: "cPanel Plans Configured",
         		},
-        		[]string{"plan"},
+        		[]string{"plan","owner"},
     )
     
     
@@ -190,7 +191,7 @@ func runMetrics(){
 
                vers := cpanelVersion()
 
-               plans := getPlans()
+               plans := getPlansWithOwner()
 
                domains := getDomains()
                
@@ -218,8 +219,8 @@ func runMetrics(){
                cpanelSessionsWeb.Set(float64(wsess))
              
                for p,ct := range plans {
-                                          
-                       cpanelPlans.With(prometheus.Labels{"plan": p }).Set(float64(ct))
+                       parts := strings.Split(p,",")                   
+                       cpanelPlans.With(prometheus.Labels{"plan": parts[0],"owner": parts[1] }).Set(float64(ct))
                }
                
              
