@@ -120,7 +120,7 @@ func getQuota(user string) (string,string,float64){
 	err := json.Unmarshal(out, &resp)
 	
 	if err != nil {
-		log.Println("error:", err)
+		// log.Println("error:", err)
 		return "","",0
 	}
 	
@@ -533,7 +533,7 @@ func getFilesInDir(root string) []string{
     filer, err := ioutil.ReadDir(root)
     
     if err != nil {
-        log.Println(err)
+        // log.Println(err)
         return files
     }
     
