@@ -14,6 +14,7 @@ import (
     "strconv"
     "math"
     "github.com/remeh/sizedwaitgroup"
+    "fmt"
 )
 
 func cpanelVersion() string{
@@ -62,13 +63,13 @@ type UapiResponse struct {
     Result struct {
       Messages string `json:"messages"`
       Status int `json:"status"`
-      Warning string `json:"warning"`
+      Warning string `json:"warnings"`
       Errors string `json:"errors"`
       Data struct {
         Http int  `json:"http"`
-        MegabytesLimit string `json:"megabyte_limit"`
-        MegabytesRemain string `json:"megabytes_remain"`
-        MegabytesUsed string `json:"megabytes_used"`
+        MegabytesLimit int `json:"megabyte_limit"`
+        MegabytesRemain float64 `json:"megabytes_remain"`
+        MegabytesUsed float64 `json:"megabytes_used"`
       } `json:"data"`   
     } `json:"result"`
 }
@@ -125,22 +126,26 @@ func getQuota(user string) (string,string,float64){
 	}
 	
 	
-	used,serr1 := strconv.ParseFloat(resp.Result.Data.MegabytesUsed,64)
-	limit,serr2 := strconv.ParseFloat(resp.Result.Data.MegabytesLimit,64)
+	// used,serr1 := strconv.ParseFloat(resp.Result.Data.MegabytesUsed,64)
+    // limit,serr2 := strconv.ParseFloat(resp.Result.Data.MegabytesLimit,64)
+    
+    used := resp.Result.Data.MegabytesUsed
+    limit := float64(resp.Result.Data.MegabytesLimit)
 	
-	if(serr1!=nil){log.Println(serr1)}
-	if(serr2!=nil){log.Println(serr2)}
-	
+	// if(serr1!=nil){log.Println(serr1)}
+    // if(serr2!=nil){log.Println(serr2)}
+
 	perc := float64(0)
 	
 	if(limit>0){
     
-	perc = math.Round((used/limit) * 100)
-	
-	}
+    perc = math.Round((used/limit) * 100)
 
+	}
+    l := fmt.Sprintf("%f", resp.Result.Data.MegabytesLimit)
+    u := fmt.Sprintf("%f", resp.Result.Data.MegabytesUsed)
 	
-    return resp.Result.Data.MegabytesLimit,resp.Result.Data.MegabytesUsed,perc
+    return l,u,perc
 }
 
 func cpUapi(user string,commands ...string) []byte{
