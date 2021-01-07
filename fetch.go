@@ -67,12 +67,61 @@ type UapiResponse struct {
       Errors string `json:"errors"`
       Data struct {
         Http int  `json:"http"`
-        MegabytesLimit int `json:"megabyte_limit"`
-        MegabytesRemain float64 `json:"megabytes_remain"`
+        MegabytesLimit interface{} `json:"megabyte_limit,string"`
+        MegabytesRemain interface{} `json:"megabytes_remain,string"`
         MegabytesUsed float64 `json:"megabytes_used"`
       } `json:"data"`   
     } `json:"result"`
 }
+
+func getQuota(user string) (string,string,float64){
+    
+    out := cpUapi(strings.TrimSpace(user),"Quota","get_quota_info")
+    
+    var resp UapiResponse
+
+    err := json.Unmarshal(out, &resp)
+
+	if err != nil {
+        if err != nil {
+            log.Println("error:", err)
+            return "","",0
+        }
+	}
+   
+    used := resp.Result.Data.MegabytesUsed
+    limit, serr := getFloat(resp.Result.Data.MegabytesLimit)
+	
+	// if(serr1!=nil){log.Println(serr1)}
+    if(serr!=nil){log.Println(serr)}
+
+	perc := float64(0)
+	
+	if(limit>0){
+    
+    perc = math.Round((used/limit) * 100)
+
+	}
+    l := fmt.Sprintf("%f", resp.Result.Data.MegabytesLimit)
+    u := fmt.Sprintf("%f", resp.Result.Data.MegabytesUsed)
+	
+    return l,u,perc
+}
+
+func getFloat(v interface{}) (float64, error) {
+    switch v := v.(type) {
+    case float64:
+      return v, nil
+    case string:
+      c, err := strconv.ParseFloat(v, 64)
+      if err != nil {
+         return 0, err
+      }
+      return float64(c), nil
+    default:
+      return 0, fmt.Errorf("conversion to int from %T not supported", v)
+    }
+  }
 
 func getBandwidth(user string) int{
     
@@ -83,7 +132,7 @@ func getBandwidth(user string) int{
         file, err := os.Open("/var/cpanel/bandwidth.cache/"+user)
      
     	if err != nil {
-    		log.Println("failed opening file: %s", err)
+    		// log.Println("failed opening file: %s", err)
     		return bw
     	}
      
@@ -109,43 +158,6 @@ func getBandwidth(user string) int{
 	
         return bw
     
-}
-
-func getQuota(user string) (string,string,float64){
-    
-    out := cpUapi(strings.TrimSpace(user),"Quota","get_quota_info")
-    
-    var resp UapiResponse
-    
-    
-	err := json.Unmarshal(out, &resp)
-	
-	if err != nil {
-		// log.Println("error:", err)
-		return "","",0
-	}
-	
-	
-	// used,serr1 := strconv.ParseFloat(resp.Result.Data.MegabytesUsed,64)
-    // limit,serr2 := strconv.ParseFloat(resp.Result.Data.MegabytesLimit,64)
-    
-    used := resp.Result.Data.MegabytesUsed
-    limit := float64(resp.Result.Data.MegabytesLimit)
-	
-	// if(serr1!=nil){log.Println(serr1)}
-    // if(serr2!=nil){log.Println(serr2)}
-
-	perc := float64(0)
-	
-	if(limit>0){
-    
-    perc = math.Round((used/limit) * 100)
-
-	}
-    l := fmt.Sprintf("%f", resp.Result.Data.MegabytesLimit)
-    u := fmt.Sprintf("%f", resp.Result.Data.MegabytesUsed)
-	
-    return l,u,perc
 }
 
 func cpUapi(user string,commands ...string) []byte{
@@ -550,8 +562,3 @@ func getFilesInDir(root string) []string{
     
     
 }
-
-
-
-
-

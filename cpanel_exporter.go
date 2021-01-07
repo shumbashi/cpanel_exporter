@@ -208,7 +208,9 @@ func runMetrics(){
                cpanelFTP.Set(float64(len(getFTP())))
                
                activeUsers.Set(float64(users))
-               
+        //     I didn't test this, but suspended should be subtracted from users to get activeUsers
+        //        activeUsers.Set(float64(users) - float64(suspended))
+        //        
                cpanelMailboxes.Set(float64(len(emails)))
                
                suspendedUsers.Set(float64(suspended))
